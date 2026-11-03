@@ -1,0 +1,97 @@
+model,forecast_hour,MAE
+Persistence,1,3570.290771484375
+Daily seasonal naive,1,3832.33154296875
+Weekly seasonal naive,1,8753.4736328125
+PyTorch MLP,1,4484.1435546875
+Persistence,2,6401.80078125
+Daily seasonal naive,2,3836.50244140625
+Weekly seasonal naive,2,8755.0419921875
+PyTorch MLP,2,4614.0
+Persistence,3,8970.1650390625
+Daily seasonal naive,3,3841.949462890625
+Weekly seasonal naive,3,8754.6376953125
+PyTorch MLP,3,4642.27294921875
+Persistence,4,11393.703125
+Daily seasonal naive,4,3846.72412109375
+Weekly seasonal naive,4,8755.560546875
+PyTorch MLP,4,4978.32421875
+Persistence,5,13647.6923828125
+Daily seasonal naive,5,3849.343017578125
+Weekly seasonal naive,5,8756.3505859375
+PyTorch MLP,5,5308.5537109375
+Persistence,6,15620.615234375
+Daily seasonal naive,6,3850.253173828125
+Weekly seasonal naive,6,8761.47265625
+PyTorch MLP,6,6037.25634765625
+Persistence,7,17326.72265625
+Daily seasonal naive,7,3851.23779296875
+Weekly seasonal naive,7,8772.5927734375
+PyTorch MLP,7,5575.580078125
+Persistence,8,18656.537109375
+Daily seasonal naive,8,3854.570556640625
+Weekly seasonal naive,8,8780.125
+PyTorch MLP,8,5841.8916015625
+Persistence,9,19704.736328125
+Daily seasonal naive,9,3857.082763671875
+Weekly seasonal naive,9,8788.51171875
+PyTorch MLP,9,5377.08056640625
+Persistence,10,20606.857421875
+Daily seasonal naive,10,3856.428466796875
+Weekly seasonal naive,10,8795.7568359375
+PyTorch MLP,10,5905.60986328125
+Persistence,11,21295.787109375
+Daily seasonal naive,11,3854.309326171875
+Weekly seasonal naive,11,8801.5419921875
+PyTorch MLP,11,6302.1572265625
+Persistence,12,21608.609375
+Daily seasonal naive,12,3852.6884765625
+Weekly seasonal naive,12,8808.5859375
+PyTorch MLP,12,7223.580078125
+Persistence,13,21370.01953125
+Daily seasonal naive,13,3850.095703125
+Weekly seasonal naive,13,8819.8681640625
+PyTorch MLP,13,7286.22119140625
+Persistence,14,20723.587890625
+Daily seasonal naive,14,3847.18212890625
+Weekly seasonal naive,14,8827.623046875
+PyTorch MLP,14,7298.3203125
+Persistence,15,19860.484375
+Daily seasonal naive,15,3843.71337890625
+Weekly seasonal naive,15,8838.8671875
+PyTorch MLP,15,7216.50244140625
+Persistence,16,18795.662109375
+Daily seasonal naive,16,3842.402587890625
+Weekly seasonal naive,16,8854.1220703125
+PyTorch MLP,16,6920.14306640625
+Persistence,17,17464.693359375
+Daily seasonal naive,17,3841.084716796875
+Weekly seasonal naive,17,8874.5009765625
+PyTorch MLP,17,6714.9267578125
+Persistence,18,15767.44140625
+Daily seasonal naive,18,3843.262939453125
+Weekly seasonal naive,18,8901.5068359375
+PyTorch MLP,18,5903.0244140625
+Persistence,19,13884.6923828125
+Daily seasonal naive,19,3844.1435546875
+Weekly seasonal naive,19,8934.5419921875
+PyTorch MLP,19,5895.2978515625
+Persistence,20,11819.9990234375
+Daily seasonal naive,20,3841.00146484375
+Weekly seasonal naive,20,8960.21484375
+PyTorch MLP,20,5409.388671875
+Persistence,21,9690.0615234375
+Daily seasonal naive,21,3838.18408203125
+Weekly seasonal naive,21,8979.4951171875
+PyTorch MLP,21,5600.81298828125
+Persistence,22,7504.60107421875
+Daily seasonal naive,22,3837.263671875
+Weekly seasonal naive,22,8996.017578125
+PyTorch MLP,22,6012.66015625
+Persistence,23,5254.1826171875
+Daily seasonal naive,23,3835.801025390625
+Weekly seasonal naive,23,9007.8662109375
+PyTorch MLP,23,6533.8564453125
+Persistence,24,3833.27197265625
+Daily seasonal naive,24,3833.27197265625
+Weekly seasonal naive,24,9015.837890625
+PyTorch MLP,24,6740.17919921875

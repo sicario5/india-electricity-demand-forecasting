@@ -1,0 +1,19 @@
+# Python environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
+
+# Source workbooks: do not commit private / large data by default
+October 2021.xlsx
+October 2022.xlsx
+October 2023.xlsx
+September 2021.xlsx
+September 2022.xlsx
+September 2023.xlsx
+
+# Generated outputs and model checkpoints
+electric/outputs/

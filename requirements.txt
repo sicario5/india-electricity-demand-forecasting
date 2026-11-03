@@ -1,0 +1,8 @@
+numpy
+pandas
+matplotlib
+openpyxl
+scikit-learn
+torch
+jupyter
+notebook
