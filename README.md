@@ -1,193 +1,96 @@
-# Indian Electricity Demand Forecasting
+# Indian Electricity Demand Forecasting (PyTorch)
 
-Forecast the next **24 hourly electricity-demand values** from the previous **168 hours (7 days)** using a PyTorch multilayer perceptron (MLP). Compare the neural network against persistence and seasonal-naive forecasting baselines.
+Forecast the next **24 hourly values** of all-India electricity demand from the previous **168 hours (7 days)** using a PyTorch MLP, and benchmark it against persistence and seasonal-naive baselines.
 
-## Project overview
+## Results
 
-This project processes Indian electricity-demand measurements from Excel workbooks, converts five-minute SCADA readings into hourly demand, creates chronological forecasting windows, trains a PyTorch MLP, and evaluates its forecasts against simple baselines.
+Test set: 637 windows covering 2023-10-04 to 2023-10-31 (demand in source units, mean ≈ 162,000).
 
-### Forecasting setup
+| Model                 |      MAE |     RMSE | WAPE (%) |
+|-----------------------|---------:|---------:|---------:|
+| Daily seasonal naive  | **3,845** | **5,342** | **2.04** |
+| PyTorch MLP           |    5,993 |    7,794 |     3.17 |
+| Weekly seasonal naive |    8,846 |   11,010 |     4.68 |
+| Persistence           |   14,366 |   17,871 |     7.60 |
 
-| Item | Configuration |
-|---|---|
-| Target measurement | `NLDC_DEMAND|P` |
-| Input lookback | Previous 168 hourly values |
-| Forecast horizon | Next 24 hourly values |
-| Input source | Monthly `.xlsx` workbooks |
-| Worksheet | `Sheet1` |
-| Source sampling frequency | 5 minutes |
-| Model | PyTorch MLP |
-| Train / validation / test split | 70% / 15% / 15% by usable timestamps |
-| Evaluation | MAE, RMSE, WAPE |
+**Takeaways**
+- The MLP clearly beats persistence (~58% lower MAE) and weekly seasonal-naive (~32% lower MAE).
+- It does **not** beat the daily seasonal-naive baseline in this run. Demand here is dominated by a strong daily cycle, and the MLP sees only about 2,500 training windows.
+- Persistence is competitive only at forecast hour 1 (MAE 3,570 vs 4,484 for the MLP) and degrades quickly after that.
+
+Reporting an honest baseline comparison is deliberate: a model is only useful if it beats the simple alternatives.
+
+## Setup
+
+| Item                 | Configuration                                |
+|----------------------|----------------------------------------------|
+| Target               | `NLDC_DEMAND\|P` (selected by measurement label) |
+| Input / horizon      | 168 hourly values → next 24 hourly values    |
+| Source               | Monthly `.xlsx` workbooks, worksheet `Sheet1` |
+| Preprocessing        | Duplicate timestamps averaged, resampled to hourly mean, gaps ≤ 2 h interpolated |
+| Split (chronological)| Train 2,550 / validation 613 / test 637 windows |
+| Scaling              | z-score fitted on training period only       |
+| Model                | MLP 168 → 256 → 128 → 24, ReLU, dropout 0.1  |
+| Training             | Adam (lr 1e-3, weight decay 1e-4), MSE loss, batch 64, early stopping (patience 10; best epoch 13) |
+| Metrics              | MAE, RMSE, WAPE in original demand units     |
+
+## Methodology
+
+1. **Load** each workbook, find the `Time` column and the `NLDC_DEMAND|P` column by label.
+2. **Clean** timestamps and values, average duplicates, resample to hourly means.
+3. **Segment** the series at gaps so no window spans missing data (3 usable segments of ~1,465 hours each).
+4. **Window** into 168-hour inputs and 24-hour targets.
+5. **Split chronologically** (70/15/15 of usable timestamps) with no shuffling across splits; normalisation statistics come from the training period only to avoid leakage.
+6. **Train** the MLP with early stopping on validation loss.
+7. **Evaluate** on the held-out test period against three baselines and report MAE by forecast hour.
+
+## Data and limitations
+
+- Six monthly workbooks were used: **September and October of 2021, 2022 and 2023**. This is not a continuous multi-year series: 4,396 usable hourly values out of 18,984 hourly slots, with two gaps of about 304 days.
+- Sampling frequency differs between files: 2021 files and September 2022 are 5-minute data, while October 2022 and the 2023 files are about 10-second data. All are averaged to hourly values.
+- Training covers Sep–Oct 2021, Sep–Oct 2022 and the first week of Sep 2023. Validation and test are both from autumn 2023, so results reflect **one season** and may not generalise to other times of year.
+- Windows overlap heavily (stride of 1 hour), so the 637 test windows are far fewer independent samples than the count suggests.
+- Confirm the units and measurement definition of `NLDC_DEMAND|P` in the dataset documentation before interpreting absolute values.
+- The model forecasts the aggregate series only; it says nothing about causes of demand.
+
+## Ideas for improvement
+
+- Download all available months for a full-year, multi-year series.
+- Add calendar features (hour of day, weekday, holidays) and weather as inputs.
+- Predict the residual over the daily seasonal-naive forecast instead of the raw series.
+- Try an LSTM or temporal convolution, and walk-forward (rolling-origin) validation.
 
 ## Repository structure
 
-```text
+```
 india-electricity-demand-forecasting/
 ├── india_electricity_demand_forecasting.ipynb
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
-├── data/
-│   └── raw/       # Place monthly source .xlsx files here
-└── outputs/       # Generated plots, metrics and model checkpoint
+├── data/raw/      # monthly .xlsx files (not included)
+└── outputs/       # plots, metrics CSVs, model checkpoint
 ```
 
-## Dataset and workbook format
-
-The notebook expects monthly Excel workbooks (`.xlsx`) in `data/raw/`.
-
-The inspected workbook layout is:
-
-- Worksheet: `Sheet1`
-- Row 1: SCADA tag names
-- Row 2: measurement labels
-- Row 3 onward: observations
-- Timestamp column is identified by the tag name `Time`
-- Demand target is selected by the measurement label `NLDC_DEMAND|P`
-
-The source observations are recorded every five minutes. The notebook averages repeated timestamps and resamples the demand readings to hourly means.
-
-**Dataset files are not included.** Add only data that you are permitted to use and redistribute. The `.gitignore` excludes Excel files under `data/raw/` by default so that large or restricted source data are not accidentally committed.
-
-## Setup
-
-### 1. Clone the repository
+## How to run
 
 ```bash
-git clone https://github.com/<your-username>/india-electricity-demand-forecasting.git
+git clone https://github.com/sicario5/india-electricity-demand-forecasting.git
 cd india-electricity-demand-forecasting
-```
-
-### 2. Create a virtual environment
-
-Windows PowerShell:
-
-```powershell
-python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-
-macOS / Linux:
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 3. Install dependencies
-
-```bash
+python -m venv .venv && source .venv/bin/activate   # Windows: .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 ```
 
-For GPU training, install a PyTorch build compatible with your installed NVIDIA driver and CUDA runtime. See the official [PyTorch installation selector](https://pytorch.org/get-started/locally/).
+1. Place the monthly `.xlsx` workbooks in `data/raw/`.
+2. In the first code cell, set `DATA_DIR = Path("data/raw")` and `OUTPUT_DIR = Path("outputs")`.
+3. Run `jupyter notebook` and execute all cells top to bottom. CUDA is used automatically if available, otherwise CPU.
 
-### 4. Add the data
+The workbooks are excluded from Git by `.gitignore`. Only use data you are permitted to use and redistribute.
 
-Download the relevant monthly workbooks and place them in:
+## Outputs
 
-```text
-data/raw/
-```
+Saved to `outputs/`: `demand_mlp.pt` (checkpoint with scaling parameters), `mlp_training_curve.png`, `example_24_hour_forecast.png`, `test_model_comparison.csv`, `test_metrics_by_forecast_hour.csv`.
 
-For meaningful multi-year forecasting, use a sufficiently complete set of monthly files. The notebook will report missing hours and long gaps.
+## Tech stack
 
-### 5. Run the notebook
-
-```bash
-jupyter notebook
-```
-
-Open `india_electricity_demand_forecasting.ipynb` and run all cells from top to bottom.
-
-The notebook automatically selects CUDA when available; otherwise, it uses CPU.
-
-## Methodology
-
-1. **Load workbooks:** read `Sheet1`, identify the `Time` column and select the `NLDC_DEMAND|P` measurement by its label.
-2. **Clean observations:** parse timestamps and numeric demand values, remove invalid rows, sort observations and average duplicate timestamps.
-3. **Hourly aggregation:** resample five-minute readings to hourly means. Only short internal gaps of up to two hours are interpolated; longer gaps remain missing.
-4. **Build contiguous segments:** split at long missing-hour gaps so training examples never span discontinuities.
-5. **Create forecasting windows:** use 168 hourly observations as input and the following 24 hours as the target.
-6. **Prevent leakage:** use chronological 70% / 15% / 15% partitions and calculate normalization statistics using training-period values only.
-7. **Train the MLP:** use Adam, MSE loss, dropout, weight decay and early stopping based on validation loss.
-8. **Evaluate:** compare predictions in the original demand scale against persistence, daily seasonal-naive and weekly seasonal-naive baselines.
-
-## Model architecture
-
-The feed-forward MLP maps a 168-dimensional input window to 24 forecast values:
-
-```text
-168 hourly inputs
-       |
-Linear(168, 256) + ReLU + Dropout(0.1)
-       |
-Linear(256, 128) + ReLU + Dropout(0.1)
-       |
-Linear(128, 24)
-       |
-Next 24 hourly demand values
-```
-
-Training configuration in the notebook:
-
-- Optimizer: Adam
-- Learning rate: `1e-3`
-- Weight decay: `1e-4`
-- Batch size: `64`
-- Maximum epochs: `100`
-- Early-stopping patience: `10`
-- Loss: Mean Squared Error (MSE)
-- Random seed: `42`
-
-## Baseline models
-
-- **Persistence:** repeats the most recent observed demand for all 24 forecast hours.
-- **Daily seasonal naive:** uses the most recent 24 hours as the next day's forecast.
-- **Weekly seasonal naive:** uses the corresponding 24-hour period from 168 hours earlier.
-
-These baselines help determine whether the neural network adds predictive value beyond simple temporal patterns.
-
-## Evaluation metrics
-
-- **MAE (Mean Absolute Error):** average absolute difference between actual and predicted demand.
-- **RMSE (Root Mean Squared Error):** gives larger errors more weight.
-- **WAPE (Weighted Absolute Percentage Error):** total absolute error divided by total absolute actual demand, expressed as a percentage.
-
-The notebook also calculates MAE by forecast lead hour (hour 1 through hour 24). Results are exported in the original demand units after reversing the training-only scaling.
-
-## Generated outputs
-
-The notebook saves files to `outputs/`:
-
-- `demand_mlp.pt` — trained model checkpoint and normalization parameters
-- `mlp_training_curve.png` — training and validation loss
-- `hourly_demand_overview.png` — hourly demand overview, if generated by the run
-- `average_demand_by_hour.png` — average demand by hour, if generated by the run
-- `example_24_hour_forecast.png` — example 24-hour forecast
-- `test_model_comparison.csv` — test-set model comparison
-- `test_metrics_by_forecast_hour.csv` — MAE by forecast lead hour
-
-Generated outputs are ignored by Git by default; regenerate them by running the notebook.
-
-## Data coverage and limitations
-
-The notebook's saved sample run showed a calendar span from **2021-09-01 to 2023-10-31**, with **4,396 usable hourly values out of 18,984 hourly slots** and two very long gaps of approximately 304 days. This is sparse coverage, not a continuous two-year time series.
-
-Important implications:
-
-- Forecast windows are not created across long missing-hour gaps.
-- A split may contain too few valid windows if the downloaded files do not provide enough continuous hourly data.
-- A few isolated monthly workbooks are not sufficient to support broad claims about continuous multi-year demand forecasting.
-- Download all available monthly files and rerun the notebook before reporting final performance.
-- Confirm the source units and measurement definitions from the dataset documentation before interpreting forecasts.
-- The model forecasts the selected aggregate measurement only; it does not identify causal drivers of demand.
-
-## Reproducibility
-
-Keep the source workbook versions, Python/PyTorch versions, split configuration and random seed consistent when comparing experiments. Report the actual test metrics produced by your run; do not pre-state that the MLP outperforms the baselines.
-
-## License
-
-No license is specified. Add a license only after deciding how the notebook and any redistributable material may be reused.
+Python, PyTorch, pandas, NumPy, scikit-learn, Matplotlib.
